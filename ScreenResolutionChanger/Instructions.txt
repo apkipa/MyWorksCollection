@@ -1,0 +1,1 @@
+There will be a file "Resolutions.txt" for this program to run(optional). The format of the resolutions should be look like this: (cxSmall,cySmall),(cxBig,cyBig)
