@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <stdbool.h>
+#include <shlwapi.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -244,7 +245,7 @@ struct DXARC_FILENAME {
 
 // ファイル格納情報
 struct DXARC_FILEHEAD {
-	ULONGLONG					NameAddress ;					// ファイル名が格納されているアドレス( ARCHIVE_HEAD構造体 のメンバ変数 FileNameTableStartAddress のアドレスをアドレス０とする) 
+	ULONGLONG					NameAddress ;					// ファイル名が格納されているアドレス( ARCHIVE_HEAD構造体 のメンバ変数 FileNameTableStartAddress のアドレスをアドレス０とする)
 	ULONGLONG					Attributes ;					// ファイル属性
 	struct DXARC_FILETIME		Time ;							// 時間情報
 	ULONGLONG					DataAddress ;					// ファイルが格納されているアドレス
@@ -260,7 +261,7 @@ struct DXARC_DIRECTORY {
 	ULONGLONG					DirectoryAddress ;				// 自分の DXARC_FILEHEAD が格納されているアドレス( DXARC_HEAD 構造体 のメンバ変数 FileTableStartAddress が示すアドレスをアドレス０とする)
 	ULONGLONG					ParentDirectoryAddress ;		// 親ディレクトリの DXARC_DIRECTORY が格納されているアドレス( DXARC_HEAD構造体 のメンバ変数 DirectoryTableStartAddress が示すアドレスをアドレス０とする)
 	ULONGLONG					FileHeadNum ;					// ディレクトリ内のファイルの数
-	ULONGLONG					FileHeadAddress ;				// ディレクトリ内のファイルのヘッダ列が格納されているアドレス( DXARC_HEAD構造体 のメンバ変数 FileTableStartAddress が示すアドレスをアドレス０とする) 
+	ULONGLONG					FileHeadAddress ;				// ディレクトリ内のファイルのヘッダ列が格納されているアドレス( DXARC_HEAD構造体 のメンバ変数 FileTableStartAddress が示すアドレスをアドレス０とする)
 };
 
 
@@ -284,7 +285,7 @@ struct DXARC_TABLE {
 struct DXARC {
 	struct DXARC_HEAD			Head ;							// アーカイブのヘッダ
 	int							CharCodeFormat ;				// 文字コード形式
-	DWORD_PTR					ReadAccessOnlyFilePointer ;		// アーカイブファイルのポインタ	
+	DWORD_PTR					ReadAccessOnlyFilePointer ;		// アーカイブファイルのポインタ
 	void						*MemoryImage ;					// メモリイメージを開いた場合のアドレス
 	struct DXARC_TABLE			Table ;							// 各テーブルへの先頭アドレスが格納された構造体
 	struct DXARC_DIRECTORY		*CurrentDirectory ;				// カレントディレクトリデータへのポインタ
@@ -313,7 +314,7 @@ struct HUFFMAN_NODE {
 	int							BitNum ;						// 圧縮後のビット列のビット数( 結合データでは使わない )
 	unsigned char				BitArray[ 32 ] ;				// 圧縮後のビット列( 結合データでは使わない )
 	int							Index ;							// 結合データに割り当てられた参照インデックス( 0 or 1 )
-	
+
 	int							ParentNode ;					// このデータを従えている結合データの要素配列のインデックス
 	int							ChildNode[ 2 ] ;				// このデータが結合させた２要素の要素配列インデックス( 結合データではない場合はどちらも -1 )
 };
@@ -428,7 +429,7 @@ int DXA_Decode(void *Src, void *Dest) {
 
 	destp = (uint8_t*)Dest;
 	srcp = (uint8_t*)Src;
-	
+
 	// 解凍後のデータサイズを得る
 	destsize = *((uint32_t*)&srcp[0]);
 
@@ -437,11 +438,11 @@ int DXA_Decode(void *Src, void *Dest) {
 
 	// キーコード
 	keycode = srcp[8];
-	
+
 	// 出力先がない場合はサイズだけ返す
 	if (Dest == NULL)
 		return (int)destsize;
-	
+
 	// 展開開始
 	sp = srcp + 9;
 	dp = destp;
@@ -455,7 +456,7 @@ int DXA_Decode(void *Src, void *Dest) {
 			srcsize--;
 			continue;
 		}
-	
+
 		// キーコードが連続していた場合はキーコード自体を出力
 		if (sp[1] == keycode) {
 			*dp = (uint8_t)keycode;
@@ -493,13 +494,13 @@ int DXA_Decode(void *Src, void *Dest) {
 			sp++;
 			srcsize--;
 			break;
-			
+
 		case 1:
 			index = *((uint16_t*)sp);
 			sp += 2;
 			srcsize -= 2;
 			break;
-			
+
 		case 2:
 			index = *((uint16_t*)sp) | (sp[2] << 16);
 			sp += 3;
@@ -639,7 +640,7 @@ ULONGLONG Huffman_Decode(void *Press, void *Dest) {
 			}
 
 			// 二つの要素を繋いで新しい要素(結合データ)を作る
-			Node[NodeNum].ParentNode = -1 ;  // 新しいデータは当然まだ何処とも繋がっていないので -1 
+			Node[NodeNum].ParentNode = -1 ;  // 新しいデータは当然まだ何処とも繋がっていないので -1
 			Node[NodeNum].Weight = Node[MinNode1].Weight + Node[MinNode2].Weight ;    // 出現数値は二つの数値を足したものをセットする
 			Node[NodeNum].ChildNode[0] = MinNode1 ;    // この結合部で 0 を選んだら出現数値が一番少ない要素に繋がる
 			Node[NodeNum].ChildNode[1] = MinNode2 ;    // この結合部で 1 を選んだら出現数値が二番目に少ない要素に繋がる
@@ -657,7 +658,7 @@ ULONGLONG Huffman_Decode(void *Press, void *Dest) {
 
 			// 残り要素の数は、一つ要素が新しく追加された代わりに
 			// 二つの要素が結合されて検索の対象から外れたので
-			// 結果 1 - 2 で -1 
+			// 結果 1 - 2 で -1
 			DataNum -- ;
 		}
 
@@ -727,7 +728,7 @@ ULONGLONG Huffman_Decode(void *Press, void *Dest) {
 
 						// まだ何も書き込まれていないビットアドレスに１ビット書き込む
 						Node[i].BitArray[BitIndex] |= (unsigned char)( ( TempBitArray[TempBitIndex] & 1 ) << BitCount ) ;
-						
+
 						// 書き込み終わったビットはもういらないので次のビットを
 						// 書き込めるように１ビット右にシフトする
 						TempBitArray[TempBitIndex] >>= 1 ;
@@ -1308,7 +1309,7 @@ bool Stream_SetPrivateData(pStream pStm, void *pData) {
 pStream Stream_Open(const void *pSource, int nType, uint32_t nFlag) {
 	pStream pStm;
 
-	pStm = (pStream)malloc(sizeof(Stream));
+	pStm = (pStream)malloc( sizeof(Stream) );
 	if (pStm == NULL) {
 		SetErrMsg("Memory allocation failure");
 		return NULL;
@@ -1329,16 +1330,18 @@ pStream Stream_Open(const void *pSource, int nType, uint32_t nFlag) {
 	}
 
 	if (nType == STREAM_TYPE_AUTOMATED) {
-		//Prefer archive file
+		// Prefer archive file
 		pStm->vt = &svtDefault[STREAM_TYPE_ARCFILE];
-		if (!pStm->vt->open(pStm, pSource, nFlag))
+		if ( !pStm->vt->open(pStm, pSource, nFlag) )
 			pStm->vt = &svtDefault[STREAM_TYPE_STDFILE];
-#error "Buggy here, fix later"
+		else
+			goto DONE;
 	}
 
-	if (!pStm->vt->open(pStm, pSource, nFlag))	//Error is set by vt function open()
+	if ( !pStm->vt->open(pStm, pSource, nFlag) )	// Error is set by vt function open()
 		goto ERR;
 
+DONE:
 	return pStm;
 
 ERR:
@@ -1693,7 +1696,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 	case 3:	//Dxa Y, Huff Y
 		pLzBuffer = malloc(nLzSize);
 		pHuffBuffer = malloc(nHuffSize);
-		if (pLzBuffer == NULL || pHuffBuffer == NULL) { 
+		if (pLzBuffer == NULL || pHuffBuffer == NULL) {
 			free(pLzBuffer);
 			free(pHuffBuffer);
 			SetErrMsg("Memory allocation failure");
@@ -3322,7 +3325,57 @@ ERR:
 	return false;
 }
 
+bool GetSteamInstallPath(char *strBuf) {
+	char buf[1024];
+	DWORD dwSize;
+	LONG nRet;
+
+	if (strBuf == NULL)
+		return false;
+
+	dwSize = 1024;
+	nRet = SHGetValueA(
+		HKEY_LOCAL_MACHINE,
+		"SOFTWARE\\WOW6432Node\\Valve\\Steam",
+		"InstallPath",
+		NULL,
+		buf,
+		&dwSize
+	);
+
+	if (nRet != ERROR_SUCCESS) {
+		dwSize = 1024;
+		nRet = SHGetValueA(
+			HKEY_LOCAL_MACHINE,
+			"SOFTWARE\\Valve\\Steam",
+			"InstallPath",
+			NULL,
+			buf,
+			&dwSize
+		);
+
+		if (nRet != ERROR_SUCCESS)
+			return false;
+	}
+
+	strcpy(strBuf, buf);
+
+	return true;
+}
+
+bool GetRabiRibiGamePath(char *strBuf) {
+	char strSteamPath[1024];
+
+	if ( !GetSteamInstallPath(strSteamPath) )
+		return false;
+
+	sprintf(strBuf, "%s%s", strSteamPath, "\\steamapps\\common\\Rabi-Ribi");
+
+	return true;
+}
+
 int main(void) {
+	char strGameInstallPath[1024];
 	char filename[1024];
 	char chPreserved;
 	char *strTemp;
@@ -3345,7 +3398,27 @@ int main(void) {
 
 	nLen = strlen(filename);
 
-	//Change path & store archive file name
+	// Replace patterns
+	if ( GetRabiRibiGamePath(strGameInstallPath) ) {
+		strTemp = StrStrIA(filename, "%GAME%");
+		while (strTemp != NULL) {
+			char strBuf[1024];
+
+			sprintf(
+				strBuf,
+				"%.*s%s%s",
+				(int)(strTemp - filename), filename,
+				strGameInstallPath,
+				strTemp + strlen("%GAME%")
+			);
+
+			strcpy(filename, strBuf);
+
+			strTemp = StrStrIA(filename, "%GAME%");
+		}
+	}
+
+	// Change path & store archive file name
 	strTemp = strrchr(filename, '/') ? : strrchr(filename, '\\');
 	if (strTemp != NULL) {
 		chPreserved = *strTemp;
@@ -3379,9 +3452,9 @@ int main(void) {
 			strArcFileNameGlobal[i] = '_';
 	}
 
-	//Do prasing
+	// Do prasing
 	printf("\n");
-	printf("Parsing archive file...\n");
+	printf("Parsing archive file \"%s\"...\n", filename);
 	if (DX_OpenArchive(&arcGlobal, filename)) {
 		printf("Preparing file system...\n");
 		CalculateFileSystemInfo();
