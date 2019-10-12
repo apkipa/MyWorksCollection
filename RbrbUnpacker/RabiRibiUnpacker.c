@@ -13,9 +13,9 @@
 
 #define GetArrLen(arr) (sizeof(arr) / sizeof(*(arr)))
 
-//It can parse DxLib V8 archive only
+// It can parse DxLib V8 archive only
 
-//Assuming strdup() exists
+// Assuming strdup() exists
 char* strdup(const char *str);
 
 #define CheckDXHeader(buf) (((uint8_t*)(buf))[0] == 'D' && ((uint8_t*)(buf))[1] == 'X')
@@ -34,7 +34,7 @@ char* strdup(const char *str);
 #define BoolErrReturn(...) return SetErrMsg(__VA_ARGS__), false
 #define VoidErrReturn(...) return (void)SetErrMsg(__VA_ARGS__)
 
-//Console IO utilities & others
+// Console IO utilities & others
 typedef struct _CONSOLE_READCONSOLE_CONTROL {
 	ULONG nLength;
 	ULONG nInitialChars;
@@ -146,7 +146,7 @@ void GenerateTempFilePath(char *path) {
 }
 
 bool OpenFolderAndSelectItem(const char *path) {
-	//Better use SHParseDisplayName() & SHOpenFolderAndSelectItems() instead
+	// Better use SHParseDisplayName() & SHOpenFolderAndSelectItems() instead
 	char *strTemp;
 
 	if (path == NULL)
@@ -165,10 +165,10 @@ bool OpenFolderAndSelectItem(const char *path) {
 }
 
 LPSTR Win_PathCombineA(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile) {
-	LPSTR (*pFunc)(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile);
+	LPSTR (WINAPI *pFunc)(LPSTR pszDest, LPCSTR pszDir, LPCSTR pszFile);
 	if (GetModuleHandle("Shlwapi.dll") == NULL)
 		LoadLibrary("Shlwapi.dll");
-	pFunc = (LPSTR(*)(LPSTR, LPCSTR, LPCSTR))GetProcAddress(GetModuleHandle("Shlwapi.dll"), "PathCombineA");
+	pFunc = (LPSTR(WINAPI*)(LPSTR, LPCSTR, LPCSTR))GetProcAddress(GetModuleHandle("Shlwapi.dll"), "PathCombineA");
 	if (pFunc == NULL)
 		return NULL;
 	return pFunc(pszDest, pszDir, pszFile);
@@ -185,7 +185,7 @@ bool isslash(int ch) {
 	return ch == '/' || ch == '\\';
 }
 
-//DxLib definitions & functions (mostly directly copied from DxLib source code)
+// DxLib definitions & functions (mostly directly copied from DxLib source code)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define DXAHEAD							*((WORD *)"DX")		// ヘッダ
@@ -969,14 +969,14 @@ void DecodeData(const void *pIn, void *pOut, size_t nSize, size_t nOffset, pDXAK
 	uint8_t *pOutBuf;
 	int nLoops;
 
-	if (pKey == NULL)	//NoKey flag is present
+	if (pKey == NULL)	// NoKey flag is present
 		return;
 
 	pInBuf = (const uint8_t*)pIn;
 	pOutBuf = (uint8_t*)pOut;
 
 	if (!((uintptr_t)pInBuf & 3) && !((uintptr_t)pOutBuf & 3)) {
-		//Both pInBuf and pOutBuf are aligned
+		// Both pInBuf and pOutBuf are aligned
 		for (size_t i = 0; i < 4 * 7; i++)
 			((uint8_t*)pKeyBuf)[i] = pKey->key[(i + nOffset) % DXA_KEY_BYTES];
 
@@ -995,7 +995,7 @@ void DecodeData(const void *pIn, void *pOut, size_t nSize, size_t nOffset, pDXAK
 			pOutBuf[i] = pInBuf[i] ^ pKey->key[(i + nOffset) % DXA_KEY_BYTES];
 	}
 	else {
-		//At least one of pInBuf and pOutBuf is unaligned
+		// At least one of pInBuf and pOutBuf is unaligned
 		for (size_t i = 0; i < nSize; i++)
 			pOutBuf[i] = pInBuf[i] ^ pKey->key[(i + nOffset) % DXA_KEY_BYTES];
 	}
@@ -1014,39 +1014,39 @@ void DX_ReadFileRaw(void *buffer, size_t nSize, FILE *stream) {
 }
 
 pDXDir DX_GetRootDirectory(pDXArchive pArc) {
-	//No error detection
+	// No error detection
 	return (pDXDir)pArc->Table.DirectoryTable;
 }
 
 pDXFileHead DX_DirToFile(pDXArchive pArc, pDXDir pDir) {
-	//No error detection
+	// No error detection
 	return (pDXFileHead)(pArc->Table.FileTable + pDir->DirectoryAddress);
 }
 
 pDXDir DX_FileToDir(pDXArchive pArc, pDXFileHead pFileHead) {
-	//No error detection
+	// No error detection
 	return (pDXDir)(pArc->Table.DirectoryTable + pFileHead->DataAddress);
 }
 
 pDXDir DX_GetParentDir(pDXArchive pArc, pDXDir pDir) {
-	//No error detection
+	// No error detection
 	if (pDir->ParentDirectoryAddress == 0xffffffffffffffff)
 		return NULL;
 	return (pDXDir)(pArc->Table.DirectoryTable + pDir->ParentDirectoryAddress);
 }
 
 pDXFileHead DX_GetDirFile(pDXArchive pArc, pDXDir pDir, size_t n) {
-	//No error detection
+	// No error detection
 	return &((pDXFileHead)(pArc->Table.FileTable + pDir->FileHeadAddress))[n];
 }
 
 const char* DX_GetOriginalFileName_Origin(uint8_t *pFileNameTable) {
-	//No error detection
+	// No error detection
 	return (char*)pFileNameTable + *((uint16_t*)&pFileNameTable[0]) * 4 + 4;
 }
 
 const char* DX_GetOriginalFileName(pDXArchive pArc, pDXFileHead pFileHead) {
-	//No error detection
+	// No error detection
 	if ((pFileHead->Attributes & FILE_ATTRIBUTE_DIRECTORY) && DX_FileToDir(pArc, pFileHead) == DX_GetRootDirectory(pArc))
 		return "/";
 	return DX_GetOriginalFileName_Origin(pArc->Table.NameTable + pFileHead->NameAddress);
@@ -1084,7 +1084,7 @@ pDXFileHead DX_GetPathFileHead_Inner(pDXArchive pArc, pDXDir pCurDir, const char
 
 		pDir = DX_FileToDir(pArc, pFileHead);
 
-		//Check whether folder is "." or ".."
+		// Check whether folder is "." or ".."
 		if (DX_GetPathFileHead_IsNameMatch(path, "."))
 			continue;
 		if (DX_GetPathFileHead_IsNameMatch(path, "..")) {
@@ -1097,7 +1097,7 @@ pDXFileHead DX_GetPathFileHead_Inner(pDXArchive pArc, pDXDir pCurDir, const char
 			continue;
 		}
 
-		//Search item in the folder
+		// Search item in the folder
 		for (size_t i = 0; i < pDir->FileHeadNum; i++) {
 			pFileHead = DX_GetDirFile(pArc, pDir, i);
 			if (DX_GetPathFileHead_IsNameMatch(path, DX_GetOriginalFileName(pArc, pFileHead)))
@@ -1399,7 +1399,7 @@ int Stream_Printf(pStream pStm, const char *fmt, ...) {
 	return (int)Stream_Write(pStm, strBuf, nLen);
 }
 
-uint32_t Stream_HashCRC32(pStream pStm) {	//Copied from DX_HashCRC32()
+uint32_t Stream_HashCRC32(pStream pStm) {	// Copied from DX_HashCRC32()
 	static bool bIsCRC32TableInited = false;
 	static uint32_t CRC32Table[256];
 	uint32_t nCRC;
@@ -1428,7 +1428,7 @@ uint32_t Stream_HashCRC32(pStream pStm) {	//Copied from DX_HashCRC32()
 		bIsCRC32TableInited = true;
 	}
 
-	//Start calculation
+	// Start calculation
 	nPos = pStm->vt->tell(pStm);
 	if (nPos == -1)
 		return 0;
@@ -1582,7 +1582,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 
 	pThis->pPrivate = pPrivate;
 
-	//Get file and directory pointers
+	// Get file and directory pointers
 	strTemp = strdup((const char*)pSource);
 	if (strTemp == NULL) {
 		free(pPrivate);
@@ -1596,7 +1596,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 		return false;
 	}
 
-	//There must be at least one slash in the string
+	// There must be at least one slash in the string
 	(strrchr(strTemp, '/') ? : strrchr(strTemp, '\\'))[0] = '\0';
 	pDir = DX_FileToDir(&arcGlobal, DX_GetPathFileHead(&arcGlobal, NULL, strTemp));
 
@@ -1621,7 +1621,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 		BoolErrReturn("Memory allocation failure");
 	}
 
-	//Generate key
+	// Generate key
 	if (pKeyGlobal != NULL) {
 		DX_CalcFileKey(strKeyGlobal, &arcGlobal, pPrivate->pFileHead, pDir, &pPrivate->key);
 		pKey = &pPrivate->key;
@@ -1630,7 +1630,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 		pKey = NULL;
 	}
 
-	//Detect file compression type
+	// Detect file compression type
 	fpArc = arcGlobal.fpArchive;
 	fseek(fpArc, arcGlobal.Head.DataStartAddress + pPrivate->pFileHead->DataAddress, SEEK_SET);
 
@@ -1638,10 +1638,10 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 	nLzSize = pPrivate->pFileHead->PressDataSize;
 	nHuffSize = pPrivate->pFileHead->HuffPressDataSize;
 	switch ((pPrivate->pFileHead->PressDataSize != 0xffffffffffffffff) | ((pPrivate->pFileHead->HuffPressDataSize != 0xffffffffffffffff) << 1)) {
-	case 0:	//Dxa N, Huff N
+	case 0:	// Dxa N, Huff N
 		DX_ReadFile(pPrivate->pUncompressed, nDataSize, fpArc, nDataSize, pKey);
 		break;
-	case 1:	//Dxa Y, Huff N
+	case 1:	// Dxa Y, Huff N
 		pLzBuffer = malloc(nLzSize);
 		if (pLzBuffer == NULL) {
 			SetErrMsg("Memory allocation failure");
@@ -1659,7 +1659,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 
 		free(pLzBuffer);
 		break;
-	case 2:	//Dxa N, Huff Y
+	case 2:	// Dxa N, Huff Y
 		pHuffBuffer = malloc(nHuffSize);
 		if (pHuffBuffer == NULL) {
 			SetErrMsg("Memory allocation failure");
@@ -1693,7 +1693,7 @@ bool Stream_SubArc_open(pStream pThis, const void *pSource, uint32_t nFlag) {
 
 		free(pHuffBuffer);
 		break;
-	case 3:	//Dxa Y, Huff Y
+	case 3:	// Dxa Y, Huff Y
 		pLzBuffer = malloc(nLzSize);
 		pHuffBuffer = malloc(nHuffSize);
 		if (pLzBuffer == NULL || pHuffBuffer == NULL) {
@@ -1825,18 +1825,18 @@ bool DX_OpenArchive_Inner_SpecialCheckOldHeader(uint8_t byteHdr[4]) {
 	return memcmp(byteHdr, byteHdrOld, sizeof(byteHdrOld)) == 0;
 }
 bool DX_OpenArchive_Inner(pDXArchive pArc) {
-	//Assuming pArc and the fp inside are valid
+	// Assuming pArc and the fp inside are valid
 	void *pHuffHeadBuffer, *pLzHeadBuffer;
 	size_t nHuffHeadSize, nLzHeadSize;
 	size_t nFileSize;
 	DXAKey *pKey;
 	FILE *fp;
 
-	//Preparation
+	// Preparation
 	fp = pArc->fpArchive;
 	rewind(fp);
 
-	//Read header
+	// Read header
 	DX_ReadFileRaw(&pArc->Head, DXARC_ID_AND_VERSION_SIZE, fp);
 	if (DX_OpenArchive_Inner_SpecialCheckOldHeader((uint8_t*)&pArc->Head.Head))
 		BoolErrReturn("Older version of Rabi-Ribi archive is unsupported");
@@ -1852,7 +1852,7 @@ bool DX_OpenArchive_Inner(pDXArchive pArc) {
 
 	pKey = pKeyGlobal;
 
-	//Read file system
+	// Read file system
 	pArc->Table.Top = malloc(pArc->Head.HeadSize);
 	if (pArc->Table.Top == NULL)
 		BoolErrReturn("Memory allocation failure");
@@ -1948,24 +1948,41 @@ bool DX_CloseArchive(pDXArchive pArc) {
 	return true;
 }
 
-void CalculateFileSystemInfo_Inner(pDXDir pDir, int *pnDirCount, int *pnFileCount) {
-	//Assuming pDir, pnDirCount and pnFileCount are valid
+void CalculateArchiveFolderContents_Inner(pDXDir pDir, int *pnDirCount, int *pnFileCount) {
+	// Assuming pDir, pnDirCount and pnFileCount are valid
 	pDXFileHead pFileHead;
 
 	for (size_t i = 0; i < pDir->FileHeadNum; i++) {
 		pFileHead = DX_GetDirFile(&arcGlobal, pDir, i);
 		if (pFileHead->Attributes & FILE_ATTRIBUTE_DIRECTORY) {
 			(*pnDirCount)++;
-			CalculateFileSystemInfo_Inner(DX_FileToDir(&arcGlobal, pFileHead), pnDirCount, pnFileCount);
+			CalculateArchiveFolderContents_Inner(DX_FileToDir(&arcGlobal, pFileHead), pnDirCount, pnFileCount);
 		}
 		else {
 			(*pnFileCount)++;
 		}
 	}
 }
+void CalculateArchiveFolderContents(pDXDir pDir, int *pnDirCount, int *pnFileCount) {
+	int nPlaceholder;
+
+	if (pnDirCount == NULL)
+		pnDirCount = &nPlaceholder;
+	*pnDirCount = 0;
+
+	if (pnFileCount == NULL)
+		pnFileCount = &nPlaceholder;
+	*pnFileCount = 0;
+
+	if (pDir == NULL)
+		return;
+
+	CalculateArchiveFolderContents_Inner(pDir, pnDirCount, pnFileCount);
+}
+
 void CalculateFileSystemInfo(void) {
-	int nDirCount = 0, nFileCount = 0;
-	CalculateFileSystemInfo_Inner(DX_GetRootDirectory(&arcGlobal), &nDirCount, &nFileCount);
+	int nDirCount, nFileCount;
+	CalculateArchiveFolderContents(DX_GetRootDirectory(&arcGlobal), &nDirCount, &nFileCount);
 	printf(
 		"There are %d folder%s and %d file%s in the archive file.\n",
 		nDirCount,
@@ -1996,9 +2013,9 @@ typedef struct tagConsoleEnvironment {
 	pStream stmIn, stmOut;
 	char strWorkDir[1024];
 	bool bFirstAC;
-	char strACBuf[4096];	//0-3 bytes: Item count; 4-~ bytes: Auto completion items
-	char strHistory[8192];	//0-3 bytes: Item count; 4-7 bytes: Current item position; 8-~ bytes: history items
-	//NOTE: Since Windows has had support for command history, the history array here will not be used
+	char strACBuf[4096];	// 0-3 bytes: Item count; 4-~ bytes: Auto completion items
+	char strHistory[8192];	// 0-3 bytes: Item count; 4-7 bytes: Current item position; 8-~ bytes: history items
+	// NOTE: Since Windows has had support for command history, the history array here will not be used
 	bool bACState[4096 / 2];
 	char chACAutoChar;
 } ConsoleEnvironment, *pConsoleEnvironment;
@@ -2008,6 +2025,11 @@ typedef struct tagCmdInfo {
 	bool (*pfMain)(int argc, char *argv[], pConsoleEnvironment pConEnv);
 	void (*pfAC)(int argc, char *argv[], int nArgPos, pConsoleEnvironment pConEnv);
 } CmdInfo, *pCmdInfo;
+
+typedef struct tagCmd_Extract_PrivData1 {
+	bool bNoOriginalFileTime;
+	size_t nTotalFilesCount;
+} Cmd_Extract_PrivData1;
 
 void ConAC_Default_ArcPath(int argc, char *argv[], int nArgPos, pConsoleEnvironment pConEnv);
 void ConAC_Default_CmdName(int argc, char *argv[], int nArgPos, pConsoleEnvironment pConEnv);
@@ -2182,7 +2204,7 @@ void InputKey(void) {
 }
 
 void CombinePath(const char *strInBase, const char *strInAdd, char *strOut) {
-	//NOTE: both strInBase and strInAdd must be standard(such as "/", "/gfx/1.png"), but strInAdd can be relative
+	// NOTE: both strInBase and strInAdd must be standard(such as "/", "/gfx/1.png"), but strInAdd can be relative
 	size_t nLen1, nLen2;
 
 	nLen1 = strlen(strInAdd);
@@ -2303,7 +2325,7 @@ bool Cmd_ls(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		BoolErrReturn("Command does not take %d parameter%s", argc - 1, argc == 2 ? "" : "s");
 	}
 
-	//Check directory
+	// Check directory
 	pFileHead = DX_GetPathFileHead(&arcGlobal, NULL, strFinalPath);
 	//pCurDir = DX_FileToDir(&arcGlobal, DX_GetPathFileHead(&arcGlobal, NULL, pConEnv->strWorkDir));
 	//pFileHead = DX_GetPathFileHead(&arcGlobal, pCurDir, argv[1]);
@@ -2313,7 +2335,7 @@ bool Cmd_ls(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		BoolErrReturn("\"%s\" is a file", DX_GetOriginalFileName(&arcGlobal, pFileHead));
 	pCurDir = DX_FileToDir(&arcGlobal, pFileHead);
 
-	//Start listing
+	// Start listing
 	nDirCount = nFileCount = 0;
 
 	GetDxDirPath(&arcGlobal, pCurDir, strFinalPath);
@@ -2363,7 +2385,7 @@ bool Cmd_cd(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 	if (argc != 2)
 		BoolErrReturn("Command does not take %d parameter%s", argc - 1, argc == 2 ? "" : "s");
 
-	//Process path
+	// Process path
 	CombinePath(pConEnv->strWorkDir, argv[1], strFinalPath);
 	pFileHead = DX_GetPathFileHead(&arcGlobal, NULL, strFinalPath);
 	if (pFileHead == NULL)
@@ -2372,7 +2394,7 @@ bool Cmd_cd(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 	if (!(pFileHead->Attributes & FILE_ATTRIBUTE_DIRECTORY))
 		BoolErrReturn("\"%s\" is a file", DX_GetOriginalFileName(&arcGlobal, pFileHead));
 
-	//Set path
+	// Set path
 	GetDxDirPath(&arcGlobal, DX_FileToDir(&arcGlobal, pFileHead), pConEnv->strWorkDir);
 
 	return true;
@@ -2402,7 +2424,7 @@ bool Cmd_clear(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 void CmdAC_preview(int argc, char *argv[], int nArgPos, pConsoleEnvironment pConEnv) {
 	if (argv[nArgPos][0] == '-') {
 		pConEnv->chACAutoChar = ' ';
-		ConAC_AddCandidate("--force-write", pConEnv);	//Force program to write to disk instead of using buffered data
+		ConAC_AddCandidate("--force-write", pConEnv);	// Force program to write to disk instead of using buffered data
 		return;
 	}
 
@@ -2440,7 +2462,7 @@ bool Cmd_preview(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 	if (strPathIn == NULL)
 		BoolErrReturn("No path is specified");
 
-	//Open streams
+	// Open streams
 	CombinePath(pConEnv->strWorkDir, strPathIn, strFinalPath);
 	stmArc = Stream_Open(strFinalPath, STREAM_TYPE_ARCFILE, STREAM_FLAG_READ);
 	if (stmArc == NULL)
@@ -2459,7 +2481,7 @@ bool Cmd_preview(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		strrchr(strrchr(strPathIn, '/') ? : strrchr(strPathIn, '\\') ? : strPathIn, '.') ? : ""
 	);
 
-	//Try to use buffered file
+	// Try to use buffered file
 	if (!bForceWrite) {
 		stmOut = Stream_Open(strFinalPath, STREAM_TYPE_STDFILE, STREAM_FLAG_READ);
 		if (stmOut != NULL) {
@@ -2469,14 +2491,14 @@ bool Cmd_preview(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		}
 	}
 
-	//Create a new file for writing
+	// Create a new file for writing
 	stmOut = Stream_Open(strFinalPath, STREAM_TYPE_STDFILE, STREAM_FLAG_WRITE);
 	if (stmOut == NULL) {
 		Stream_Close(stmArc);
 		return false;
 	}
 
-	//Extract data
+	// Extract data
 	nRead = Stream_Read(stmArc, buf, GetArrLen(buf));
 	while (nRead > 0) {
 		Stream_Write(stmOut, buf, nRead);
@@ -2487,9 +2509,9 @@ bool Cmd_preview(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 	Stream_Close(stmOut);
 
 ExtractDone:
-	//Open file
+	// Open file
 	if ((uintptr_t)ShellExecute(NULL, "open", strFinalPath, NULL, NULL, SW_SHOWDEFAULT) <= 32) {
-		//Return value of ShellExecute() that > 32 indicates success
+		// Return value of ShellExecute() that > 32 indicates success
 		OpenFolderAndSelectItem(strFinalPath);
 		BoolErrReturn("Your system appears unable to open this kind of file. Opening it in Windows Explorer.");
 	}
@@ -2500,7 +2522,7 @@ ExtractDone:
 void CmdAC_tree(int argc, char *argv[], int nArgPos, pConsoleEnvironment pConEnv) {
 	if (argv[nArgPos][0] == '-') {
 		pConEnv->chACAutoChar = ' ';
-		ConAC_AddCandidate("--ignore-file", pConEnv);	//List directories only
+		ConAC_AddCandidate("--ignore-file", pConEnv);	// List directories only
 		return;
 	}
 
@@ -2513,7 +2535,7 @@ void Cmd_tree_Inner(pDXDir pDir, char *restrict strPrefix, size_t nDepth, pConso
 	if (pDir == NULL || pDir->FileHeadNum == 0)
 		return;
 
-	//Print directories
+	// Print directories
 	nPrefixLen = strlen(strPrefix);
 	strcpy(&strPrefix[nPrefixLen], "|   ");
 
@@ -2541,7 +2563,7 @@ void Cmd_tree_Inner_IgnoreFile(pDXDir pDir, char *restrict strPrefix, size_t nDe
 	if (pDir == NULL)
 		return;
 
-	//Collect directories
+	// Collect directories
 	nDirNum = 0;
 	for (size_t i = 0; i < pDir->FileHeadNum; i++) {
 		pFileHead = DX_GetDirFile(&arcGlobal, pDir, i);
@@ -2560,7 +2582,7 @@ void Cmd_tree_Inner_IgnoreFile(pDXDir pDir, char *restrict strPrefix, size_t nDe
 			*pFileHeadTemp++ = pFileHead;
 	}
 
-	//Print directories
+	// Print directories
 	nPrefixLen = strlen(strPrefix);
 	strcpy(&strPrefix[nPrefixLen], "|   ");
 
@@ -2610,7 +2632,7 @@ bool Cmd_tree(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		CombinePath(pConEnv->strWorkDir, strPathIn, strFinalPath);
 	}
 
-	//Check directory
+	// Check directory
 	pFileHead = DX_GetPathFileHead(&arcGlobal, NULL, strFinalPath);
 	if (pFileHead == NULL)
 		return false;
@@ -2618,7 +2640,7 @@ bool Cmd_tree(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		BoolErrReturn("\"%s\" is a file", DX_GetOriginalFileName(&arcGlobal, pFileHead));
 	pCurDir = DX_FileToDir(&arcGlobal, pFileHead);
 
-	//Start listing
+	// Start listing
 	GetDxDirPath(&arcGlobal, pCurDir, strFinalPath);
 	Stream_Printf(pConEnv->stmOut, "Tree of %s\n", strFinalPath);
 	Stream_Printf(pConEnv->stmOut, ".\n");
@@ -2633,11 +2655,11 @@ void CmdAC_extract(int argc, char *argv[], int nArgPos, pConsoleEnvironment pCon
 	if (argv[nArgPos][0] == '-') {
 		pConEnv->chACAutoChar = ' ';
 		if (argv[nArgPos][1] == '-') {
-			ConAC_AddCandidate("--no-original-filetime", pConEnv);	//Don't respect original file time stored in the archive
+			ConAC_AddCandidate("--no-original-filetime", pConEnv);	// Don't respect original file time stored in the archive
 		}
 		else {
-			ConAC_AddCandidate("-i", pConEnv);	//Input path
-			ConAC_AddCandidate("-o", pConEnv);	//Output path
+			ConAC_AddCandidate("-i", pConEnv);	// Input path
+			ConAC_AddCandidate("-o", pConEnv);	// Output path
 		}
 		return;
 	}
@@ -2664,7 +2686,7 @@ bool Cmd_extract_SetFileTime(char *strFilePath, pDXFileHead pFileHead) {
 
 	return true;
 }
-void Cmd_extract_Inner(pDXDir pDir, char *strDirDest, size_t *pnCount, bool bNoOriginalFileTime, pConsoleEnvironment pConEnv) {
+void Cmd_extract_Inner(pDXDir pDir, char *strDirDest, size_t *pnCount, Cmd_Extract_PrivData1 *pPrivData1, pConsoleEnvironment pConEnv) {
 	pStream stmArc, stmOut;
 	pDXFileHead pFileHead;
 	size_t nStrLen;
@@ -2673,24 +2695,24 @@ void Cmd_extract_Inner(pDXDir pDir, char *strDirDest, size_t *pnCount, bool bNoO
 	nStrLen = strlen(strDirDest);
 	strcpy(&strDirDest[nStrLen], "\\");
 
-	//This function ignores errors by default
+	// This function ignores errors by default
 
 	for (size_t i = 0; i < pDir->FileHeadNum; i++) {
 		pFileHead = DX_GetDirFile(&arcGlobal, pDir, i);
 		strcpy(&strDirDest[nStrLen + 1], DX_GetOriginalFileName(&arcGlobal, pFileHead));
 
 		if (pFileHead->Attributes & FILE_ATTRIBUTE_DIRECTORY) {
-			//Directory
+			// Directory
 			if (CreateDirectory(strDirDest, NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS) {
 				SetErrMsg("Cannot create directory \"%s\"", strDirDest);
 				PrintErrMsg();
 				continue;
 			}
 
-			Cmd_extract_Inner(DX_FileToDir(&arcGlobal, pFileHead), strDirDest, pnCount, bNoOriginalFileTime, pConEnv);
+			Cmd_extract_Inner(DX_FileToDir(&arcGlobal, pFileHead), strDirDest, pnCount, pPrivData1, pConEnv);
 		}
 		else {
-			//File
+			// File
 			char strBuf[1024];
 
 			GetDxDirPath(&arcGlobal, pDir, strBuf);
@@ -2698,7 +2720,7 @@ void Cmd_extract_Inner(pDXDir pDir, char *strDirDest, size_t *pnCount, bool bNoO
 				strcat(strBuf, "/");
 			strcat(strBuf, DX_GetOriginalFileName(&arcGlobal, pFileHead));
 
-			Stream_Printf(pConEnv->stmOut, "%d: %s\n", (int)++(*pnCount), strBuf);
+			Stream_Printf(pConEnv->stmOut, "%d/%d: %s\n", (int)++(*pnCount), pPrivData1->nTotalFilesCount, strBuf);
 
 			stmArc = Stream_Open(strBuf, STREAM_TYPE_ARCFILE, STREAM_FLAG_READ);
 			if (stmArc == NULL) {
@@ -2726,7 +2748,7 @@ void Cmd_extract_Inner(pDXDir pDir, char *strDirDest, size_t *pnCount, bool bNoO
 			Stream_Close(stmOut);
 		}
 
-		if (!bNoOriginalFileTime) {
+		if (!pPrivData1->bNoOriginalFileTime) {
 			if (!Cmd_extract_SetFileTime(strDirDest, pFileHead)) {
 				SetErrMsg("Cannot set file time for \"%s\"", strDirDest);
 				PrintErrMsg();
@@ -2738,6 +2760,7 @@ void Cmd_extract_Inner(pDXDir pDir, char *strDirDest, size_t *pnCount, bool bNoO
 }
 bool Cmd_extract(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 	char strFinalPathIn[1024], strFinalPathOut[1024], strPhyWorkDir[1024], buf[1024];
+	Cmd_Extract_PrivData1 privData1;
 	char *strPathIn, *strPathOut;
 	bool bNoOriginalFileTime;
 	pStream stmArc, stmOut;
@@ -2798,15 +2821,15 @@ bool Cmd_extract(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		Win_PathCombineA(strFinalPathOut, strPhyWorkDir, strPathOut);
 	}
 
-	//Check file
+	// Check file
 	pFileHead = DX_GetPathFileHead(&arcGlobal, NULL, strFinalPathIn);
 	if (pFileHead == NULL)
 		return false;
 
-	//Start extracting
+	// Start extracting
 	if (pFileHead->Attributes & FILE_ATTRIBUTE_DIRECTORY) {
-		//Directory
-		//1) Create a folder first
+		// Directory
+		//   1) Create a folder first
 		if (strcmp(DX_GetOriginalFileName(&arcGlobal, pFileHead), "/") == 0) {
 			strcat(strFinalPathOut, "\\");
 			strcat(strFinalPathOut, strArcFileNameGlobal);
@@ -2819,11 +2842,14 @@ bool Cmd_extract(int argc, char *argv[], pConsoleEnvironment pConEnv) {
 		if (CreateDirectory(strFinalPathOut, NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS)
 			BoolErrReturn("Cannot create directory \"%s\"", strFinalPathOut);
 
-		//2) Call Cmd_extract_Inner()
-		Cmd_extract_Inner(DX_FileToDir(&arcGlobal, pFileHead), strFinalPathOut, &nCount, bNoOriginalFileTime, pConEnv);
+		//   2) Call Cmd_extract_Inner()
+		privData1.bNoOriginalFileTime = bNoOriginalFileTime;
+		CalculateArchiveFolderContents(DX_FileToDir(&arcGlobal, pFileHead), NULL, &privData1.nTotalFilesCount);
+
+		Cmd_extract_Inner(DX_FileToDir(&arcGlobal, pFileHead), strFinalPathOut, &nCount, &privData1, pConEnv);
 	}
 	else {
-		//File
+		// File
 		stmArc = Stream_Open(strFinalPathIn, STREAM_TYPE_ARCFILE, STREAM_FLAG_READ);
 		if (stmArc == NULL)
 			BoolErrReturn("Cannot read archive file \"%s\" (%s)", strFinalPathIn, GetErrMsg());
@@ -2882,9 +2908,9 @@ size_t Con_ParseCmdLine_FindMatchQuote(const char *str, size_t nBeginPos) {
 	return strTemp - str;
 }
 void* Con_ParseCmdLine(const char *str, int *argc, char *argv[]) {
-	//It will return a buffer which needs to be freed after using and let argv point to it
-	//Initial value of argc represents max arguments count that argv can hold
-	//It will not accept an empty string
+	// It will return a buffer which needs to be freed after using and let argv point to it
+	// Initial value of argc represents max arguments count that argv can hold
+	// It will not accept an empty string
 	int nLastCharToken, nCurCharToken;
 	size_t nMaxArgs;
 	size_t nLenTmp;
@@ -2912,7 +2938,7 @@ void* Con_ParseCmdLine(const char *str, int *argc, char *argv[]) {
 	nMaxArgs = *argc;
 	*argc = 0;
 
-	//Add space between close tokens
+	// Add space between close tokens
 	nLenTmp = 0;
 	bInQuote = false;
 	nLastCharToken = CON_CHARTOKEN_SPACE;
@@ -2922,9 +2948,9 @@ void* Con_ParseCmdLine(const char *str, int *argc, char *argv[]) {
 
 		nCurCharToken = Con_ParseCmdLine_GetCharToken(str[i]);
 		if (nCurCharToken != nLastCharToken) {
-			//Char token type changed
+			// Char token type changed
 			if (!bInQuote && (nLastCharToken != CON_CHARTOKEN_SPACE && nCurCharToken != CON_CHARTOKEN_SPACE)) {
-				//No space between tokens, add one
+				// No space between tokens, add one
 				strTemp[nLenTmp++] = ' ';
 			}
 			nLastCharToken = nCurCharToken;
@@ -2934,18 +2960,18 @@ void* Con_ParseCmdLine(const char *str, int *argc, char *argv[]) {
 	}
 	strTemp[nLenTmp] = '\0';
 
-	//Prase command line
+	// Prase command line
 	bInQuote = false;
 	nLastCharToken = CON_CHARTOKEN_SPACE;
 	for (size_t i = 0; i < nLenTmp; i++) {
 		if (strTemp[i] == '"') {
-			//Erase current " and move string (& translate double quotes to one)
+			// Erase current " and move string (& translate double quotes to one)
 			if (strTemp[i + 1] != '"')
 				bInQuote = !bInQuote;
 			memmove(&strTemp[i], &strTemp[i + 1], nLenTmp - (i + 1) + 1);
 		}
 
-		//Detect token change
+		// Detect token change
 		nCurCharToken = bInQuote ? CON_CHARTOKEN_TEXT : Con_ParseCmdLine_GetCharToken(strTemp[i]);
 		if (nCurCharToken != nLastCharToken) {
 			switch (nCurCharToken) {
@@ -2988,7 +3014,7 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 	ConAC_SetItemCount(pConEnv, 0);
 	pConEnv->chACAutoChar = '\0';
 
-	//Parse command
+	// Parse command
 	argc = GetArrLen(argv);
 	pParseTemp = Con_ParseCmdLine(str, &argc, argv);
 	if (pParseTemp == NULL)
@@ -2998,7 +3024,7 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 
 #warning TODO: Add support for restarting AC when encountered &&, ||, etc...
 
-	//Get auto completion list from command or native function
+	// Get auto completion list from command or native function
 	if (argc == 1) {
 		ConAC_Default_CmdName(argc, argv, 0, pConEnv);
 	}
@@ -3008,7 +3034,7 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 			cmds[nCmdId].pfAC(argc, argv, argc - 1, pConEnv);
 	}
 
-	//Since sub AC function may modify argv, we need to regenerate it
+	// Since sub AC function may modify argv, we need to regenerate it
 	free(pParseTemp);
 	pParseTemp = Con_ParseCmdLine(str, &argc, argv);
 	if (pParseTemp == NULL)
@@ -3016,12 +3042,12 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 	if (isspace(str[strlen(str) - 1]))
 		argv[argc++] = "";
 
-	//Detect match items from list
+	// Detect match items from list
 	nCandidateCount = ConAC_GetItemCount(pConEnv);
 	if (nCandidateCount == 0)
 		return false;
 
-	//1) Early search
+	// 1) Early search
 	nLen = strlen(argv[argc - 1]);
 	for (size_t i = 0; i < nCandidateCount; i++) {
 		pConEnv->bACState[i] = strncmp(argv[argc - 1], ConAC_GetItem(pConEnv, i), nLen) == 0;
@@ -3040,18 +3066,18 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 
 	free(pParseTemp);
 
-	//2) Re-apply modified candidates count
+	// 2) Re-apply modified candidates count
 	ConAC_SetItemCount(pConEnv, nCandidateCount);
 	if (nCandidateCount == 0)
 		return false;
 
-	//3) Try to complete public front part with valid candidates
+	// 3) Try to complete public front part with valid candidates
 	nLenPublic = strlen(ConAC_GetItem(pConEnv, 0));
 	for (size_t i = 1; i < nCandidateCount; i++)
 		nLenPublic = Con_GetLine_TryAutoComplete_GetFrontPublicStrLen(ConAC_GetItem(pConEnv, 0), ConAC_GetItem(pConEnv, i), nLenPublic);
 
-	//Write result back to str
-	//1) Get quotes count
+	// Write result back to str
+	//   1) Get quotes count
 	nCount = 0;
 	nLen = strlen(str);
 	for (size_t i = 0; i < nLen; i++) {
@@ -3069,7 +3095,7 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 		strTemp = &str[nLen - 1];
 	}
 
-	//2) Find position at which ought to be written
+	//   2) Find position at which ought to be written
 	while (strTemp > str) {
 		if (*strTemp == '"') {
 			nCount--;
@@ -3089,9 +3115,9 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 	if (strTemp < str)
 		strTemp = str;
 
-	//3) Write back
-	if (strnchr(ConAC_GetItem(pConEnv, 0), nLenPublic, ' ') != NULL) {	//Check whether string contains white spaces
-		//Add quotes
+	//   3) Write back
+	if (strnchr(ConAC_GetItem(pConEnv, 0), nLenPublic, ' ') != NULL) {	// Check whether string contains white spaces
+		// Add quotes
 		if ((strTemp - str) + nLenPublic + 2 > nMaxLen)
 			return false;
 
@@ -3100,21 +3126,21 @@ bool Con_GetLine_TryAutoComplete(char *str, size_t nMaxLen, pConsoleEnvironment 
 		strTemp[nLenPublic + 1] = '"';
 		strTemp[nLenPublic + 2] = '\0';
 
-		//Smart add character when there is only one candidate
+		// Smart add character when there is only one candidate
 		if (pConEnv->chACAutoChar != '\0' && nCandidateCount == 1 && (strTemp - str) + nLenPublic + 3 <= nMaxLen) {
 			strTemp[nLenPublic + 2] = pConEnv->chACAutoChar;
 			strTemp[nLenPublic + 3] = '\0';
 		}
 	}
 	else {
-		//Directly copy
+		// Directly copy
 		if ((strTemp - str) + nLenPublic > nMaxLen)
 			return false;
 
 		strncpy(strTemp, ConAC_GetItem(pConEnv, 0), nLenPublic);
 		strTemp[nLenPublic] = '\0';
 
-		//Smart add character when there is only one candidate
+		// Smart add character when there is only one candidate
 		if (pConEnv->chACAutoChar != '\0' && nCandidateCount == 1 && (strTemp - str) + nLenPublic + 1 <= nMaxLen) {
 			strTemp[nLenPublic] = pConEnv->chACAutoChar;
 			strTemp[nLenPublic + 1] = '\0';
@@ -3133,7 +3159,7 @@ DWORD Con_GetLine_ReadString(char *str, size_t nMaxLen, HANDLE hConIn) {
 	crc.nLength = sizeof(CONSOLE_READCONSOLE_CONTROL);
 	crc.nInitialChars = nLen;
 	crc.dwCtrlWakeupMask = 1 << '\t';
-	MultiByteToWideChar(CP_ACP, 0, str, nLen, wstrBuf, nLen);	//Fill the buffer so ReadConsoleW() will not be confused
+	MultiByteToWideChar(CP_ACP, 0, str, nLen, wstrBuf, nLen);	// Fill the buffer so ReadConsoleW() will not be confused
 
 	ReadConsoleW(hConIn, wstrBuf, nMaxLen - 1, &dwRead, &crc);
 	WideCharToMultiByte(CP_ACP, 0, wstrBuf, dwRead, str, nMaxLen - 1, NULL, NULL);
@@ -3149,7 +3175,7 @@ DWORD Con_GetLine_WriteString(const char *str, size_t nLen, HANDLE hConOut) {
 	WriteConsoleW(hConOut, wstrBuf, nLen, &dwWritten, NULL);
 	return dwWritten;
 }
-size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	//nMaxLen includes '\0'
+size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	// nMaxLen includes '\0'
 	uint32_t nLastInputCRC, nCurInputCRC;
 	DWORD dwRead, dwWritten;
 	HANDLE hConIn, hConOut;
@@ -3172,19 +3198,19 @@ size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	//n
 	nLastInputCRC = DX_HashCRC32("\t", 1);
 
 	if ((GetFileType(hConIn) & ~FILE_TYPE_REMOTE) == FILE_TYPE_CHAR) {
-		//Console handle
+		// Console handle
 		xOrigin = wherex();
 		yOrigin = wherey();
 
 		for (;;) {
 			dwRead = Con_GetLine_ReadString(str, nMaxLen, hConIn);
 
-			//After reading from console, there may be 2 results
-			//1)	The input is terminated with \r\n and contains no \t
-			//2)	The input contains \t and will not contain \r\n
+			// After reading from console, there may be 2 results
+			// 1) The input is terminated with \r\n and contains no \t
+			// 2) The input contains \t and will not contain \r\n
 			strTemp = strchr(str, '\t');
 			if (strTemp == NULL) {
-				//Enter is pressed, end input
+				// Enter is pressed, end input
 				nLen = strlen(str);
 				if (str[nLen - 1] == '\n' || str[nLen - 1] == '\r')
 					str[nLen - 1] = '\0';
@@ -3193,9 +3219,9 @@ size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	//n
 				break;
 			}
 
-			//Then do auto completion
-			//Due to the design of ReadConsoleW(), the char after \t will be overlapped,
-			//so we can only use '\t' as the end of the input
+			// Then do auto completion
+			// Due to the design of ReadConsoleW(), the char after \t will be overlapped,
+			// so we can only use '\t' as the end of the input
 			strTemp[0] = '\0';
 
 			nLen = strlen(str);
@@ -3205,14 +3231,14 @@ size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	//n
 			pConEnv->bFirstAC = nCurInputCRC != nLastInputCRC;
 			nLastInputCRC = nCurInputCRC;
 			if (pConEnv->bFirstAC || ConAC_GetItemCount(pConEnv) == 1) {
-				//Try to auto complete
+				// Try to auto complete
 				if (Con_GetLine_TryAutoComplete(str, nMaxLen, pConEnv)) {
 					nLen = strlen(str);
 
 					gotoxy(xOrigin, yOrigin);
 					Con_GetLine_WriteString(str, nLen, hConOut);
 
-					if (ConAC_GetItemCount(pConEnv) > 1)	//Check whether there is more than one candidate
+					if (ConAC_GetItemCount(pConEnv) > 1)	// Check whether there is more than one candidate
 						nLastInputCRC = DX_HashCRC32(str, nLen);
 				}
 				else {
@@ -3220,7 +3246,7 @@ size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	//n
 				}
 			}
 			else {
-				//Just print the candidates
+				// Just print the candidates
 				nCount = ConAC_GetItemCount(pConEnv);
 				if (nCount == 0) {
 					putchar('\a');
@@ -3240,8 +3266,8 @@ size_t Con_GetLine(char *str, size_t nMaxLen, pConsoleEnvironment pConEnv) {	//n
 		}
 	}
 	else {
-		//Pure text handle
-		//ReadFile() can be used here
+		// Pure text handle
+		// ReadFile() can be used here
 		size_t i;
 
 		i = 0;
@@ -3271,7 +3297,7 @@ bool ConsoleMain(void) {
 	size_t nCmdId;
 	int argc;
 
-	//Prepare streams
+	// Prepare streams
 	ConEnv.stmIn = Stream_Open(NULL, STREAM_TYPE_STDFILE_STDIN, 0);
 	if (ConEnv.stmIn == NULL)
 		return false;
@@ -3292,7 +3318,7 @@ bool ConsoleMain(void) {
 		if (strCommandBuffer[0] == '\0')
 			continue;
 
-		//Parse command line
+		// Parse command line
 		argc = GetArrLen(argv);
 		pParseTemp = Con_ParseCmdLine(strCommandBuffer, &argc, argv);
 		if (pParseTemp == NULL) {
@@ -3300,7 +3326,7 @@ bool ConsoleMain(void) {
 			continue;
 		}
 
-		//Detect command
+		// Detect command
 		if (strcmp(argv[0], "exit") == 0)
 			break;
 		nCmdId = Con_FindCommand(argv[0]);
