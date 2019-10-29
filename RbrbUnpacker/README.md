@@ -15,4 +15,4 @@ Useable commands:
 * tree [--ignore-file]: List directories and files in a tree-like format
 * extract [-i path] [-o path] [--no-original-filetime]: Extract files from the archive to disk
 
-In order to prevent some bad situations from happening, you must enter the key yourself.
+In order to prevent some bad things from happening, the default key is provided by DxLib and the private key is not stored in the code.
